@@ -6,13 +6,80 @@
     android:layout_height="match_parent"
     tools:context="pl.com.tomaszstrzelecki.ecs.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <ScrollView
+        android:layout_height="match_parent"
+        android:layout_width="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24sp"
+                android:text="1.Wybierz sensor:"
+                android:textSize="24sp"
+                android:textAlignment="center"/>
+
+            <Spinner
+                android:id="@+id/sensors_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/holo_blue_dark"
+                android:layout_marginTop="8dp"
+                android:dropDownWidth="match_parent"
+                android:minHeight="40dp"
+                android:textAlignment="center"
+                />
+
+            <TextView
+                android:id="@+id/textView2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="2.Wybierz częstotliwość:"
+                android:textSize="24sp"
+                android:textAlignment="center"/>
+
+            <Spinner
+                android:id="@+id/sensitivity_spinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/holo_blue_dark"
+                android:layout_marginTop="8dp"
+                android:dropDownWidth="match_parent"
+                android:minHeight="40dp"
+                android:textAlignment="center"/>
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="2.Wpisz czas pomiaru:"
+                android:textSize="24sp"
+                android:textAlignment="center"/>
+
+            <EditText
+                android:id="@+id/timeLength"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:focusedByDefault="false"
+                android:hint="Ilość minut"
+                android:inputType="numberDecimal"
+                android:selectAllOnFocus="true"
+                android:singleLine="true"
+                android:textAlignment="center"
+                android:textColorLink="@android:color/background_dark" />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Rozpocznij pomiar"
+                android:textSize="26sp"
+                android:layout_marginTop="20dp"/>
+        </LinearLayout>
+    </ScrollView>
 </android.support.constraint.ConstraintLayout>
