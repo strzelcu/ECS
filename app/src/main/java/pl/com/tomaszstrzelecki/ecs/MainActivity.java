@@ -1,12 +1,16 @@
 package pl.com.tomaszstrzelecki.ecs;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.IBinder;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,6 +23,10 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
+
+    // Global variables
+
+    static final int PERMISSION_WRITE_EXTERNAL_STORAGE = 1;
 
     // Graphics variables
 
@@ -39,13 +47,13 @@ public class MainActivity extends AppCompatActivity {
             AppService.LocalBinder binder = (AppService.LocalBinder) service;
             appService = binder.getService();
             isAppServiceConnect = true;
-            Log.i("MainActivity", "AppService is binded to MainActivity");
+            Log.i("AppLog", "AppService is binded to MainActivity");
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
             isAppServiceConnect = false;
-            Log.i("MainActivity", "AppService is unbinded from MainActivity");
+            Log.i("AppLog", "AppService is unbinded from MainActivity");
         }
     };
 
@@ -53,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        checkWriteExternalStoragePermissions();
 
         // Graphics initialization
 
@@ -144,17 +153,50 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (!AppService.isMesuringOn()) {
-                    monitoring.setText("Trwa pomiar");
-                    monitoring.setEnabled(false);
-                    sensorsSpiner.setEnabled(false);
-                    sensitivitySpinner.setEnabled(false);
-                    editTextTimeLength.setEnabled(false);
-                    AppService.setTimeLength((Integer.valueOf(editTextTimeLength.getText().toString())));
-                    appService.startTest();
-                    finish();
+                    try {
+                        AppService.setTimeLength((Integer.valueOf(editTextTimeLength.getText().toString())));
+                        monitoring.setText("Trwa pomiar");
+                        monitoring.setEnabled(false);
+                        sensorsSpiner.setEnabled(false);
+                        sensitivitySpinner.setEnabled(false);
+                        editTextTimeLength.setEnabled(false);
+                        appService.startMesuring();
+                        finish();
+                    } catch (Exception e) {
+                        Toast.makeText(getApplicationContext(), "Wpisz czas w pole tekstowe!", Toast.LENGTH_LONG).show();
+                    }
                 }
             }
         });
+    }
+
+    // Check permissions
+
+    private static class PermissionManager {
+        //A method that can be called from any Activity, to check for specific permission
+        private static void check(Activity activity, String permission, int requestCode){
+            //If requested permission isn't Granted yet
+            if (ActivityCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+                //Request permission from user
+                ActivityCompat.requestPermissions(activity,new String[]{permission},requestCode);
+            }
+        }
+    }
+
+    public void checkWriteExternalStoragePermissions() {
+        PermissionManager.check(this, Manifest.permission.WRITE_EXTERNAL_STORAGE, PERMISSION_WRITE_EXTERNAL_STORAGE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+
+        switch (requestCode) {
+            case PERMISSION_WRITE_EXTERNAL_STORAGE: {
+                if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(getApplicationContext(), "Brak uprawnień zapisu w pamięci wewnętrznej", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
     }
 
     @Override
@@ -171,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
             monitoring.setText("Trwa pomiar");
         }
         super.onStart();
-        Log.i("MainActivity", "Main activity started");
+        Log.i("AppLog", "Main activity started");
     }
 
     @Override
@@ -187,6 +229,6 @@ public class MainActivity extends AppCompatActivity {
             editTextTimeLength.setEnabled(true);
         }
         super.onStop();
-        Log.i("MainActivity", "Main activity stopped");
+        Log.i("AppLog", "Main activity stopped");
     }
 }
