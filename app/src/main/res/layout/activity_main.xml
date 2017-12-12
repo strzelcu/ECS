@@ -12,7 +12,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:focusableInTouchMode="true">
 
             <TextView
                 android:id="@+id/textView1"
@@ -66,20 +67,19 @@
                 android:id="@+id/timeLength"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:focusedByDefault="false"
                 android:hint="Ilość minut"
                 android:inputType="numberDecimal"
-                android:selectAllOnFocus="true"
                 android:singleLine="true"
                 android:textAlignment="center"
                 android:textColorLink="@android:color/background_dark" />
 
             <Button
+                android:id="@+id/monitoring"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
                 android:text="Rozpocznij pomiar"
-                android:textSize="26sp"
-                android:layout_marginTop="20dp"/>
+                android:textSize="26sp" />
         </LinearLayout>
     </ScrollView>
 </android.support.constraint.ConstraintLayout>
