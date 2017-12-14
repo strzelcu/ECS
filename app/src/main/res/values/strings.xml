@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Zużycie energii przez sensory</string>
+    <string name="inProgress">Trwa pomiar</string>
+    <string name="label1">1.Wybierz sensor:</string>
+    <string name="label2">2.Wybierz częstotliwość:</string>
+    <string name="label3">3.Wpisz czas pomiaru:</string>
+    <string name="minutes">Ilość minut</string>
+    <string name="start">Rozpocznij pomiar</string>
 </resources>

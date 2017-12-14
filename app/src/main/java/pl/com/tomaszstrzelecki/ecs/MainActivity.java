@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,6 +22,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import static pl.com.tomaszstrzelecki.ecs.AppService.*;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -38,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
     // App Service
     private AppService appService;
     private boolean isAppServiceConnect = false;
-    private Intent appServiceIntent;
     private ServiceConnection mConnection = new ServiceConnection() {
 
         @Override
@@ -66,11 +68,11 @@ public class MainActivity extends AppCompatActivity {
         // Graphics initialization
 
         setContentView(R.layout.activity_main);
-        editTextTimeLength = (EditText) findViewById(R.id.timeLength);
+        editTextTimeLength = findViewById(R.id.timeLength);
 
         // Sensor menu
 
-        sensorsSpiner = (Spinner) findViewById(R.id.sensors_spinner);
+        sensorsSpiner = findViewById(R.id.sensors_spinner);
         final String[] sensorsElements = {"Akcelerometr", "Żyroskop", "Magnetometr", "Czujnik zbliżeniowy"};
         ArrayAdapter<String> sensorsAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, sensorsElements);
         sensorsSpiner.setAdapter(sensorsAdapter);
@@ -81,22 +83,18 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> arg0, View arg1,
                                        int id, long position) {
 
-                if (AppService.getSensorType() != 0) {
-
-                }
-
                 switch ((int) position) {
                     case 0:
-                        AppService.setSensorType(Sensor.TYPE_ACCELEROMETER);
+                        setSensorType(Sensor.TYPE_ACCELEROMETER);
                         break;
                     case 1:
-                        AppService.setSensorType(Sensor.TYPE_GYROSCOPE);
+                        setSensorType(Sensor.TYPE_GYROSCOPE);
                         break;
                     case 2:
-                        AppService.setSensorType(Sensor.TYPE_MAGNETIC_FIELD);
+                        setSensorType(Sensor.TYPE_MAGNETIC_FIELD);
                         break;
                     case 3:
-                        AppService.setSensorType(Sensor.TYPE_PROXIMITY);
+                        setSensorType(Sensor.TYPE_PROXIMITY);
                         break;
                 }
             }
@@ -109,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Sensitivity menu
 
-        sensitivitySpinner = (Spinner) findViewById(R.id.sensitivity_spinner);
+        sensitivitySpinner = findViewById(R.id.sensitivity_spinner);
         final String[] sensitivityElements = {"Niska", "Średnia", "Wysoka"};
         ArrayAdapter<String> sensitivityAdapter = new ArrayAdapter<>(this, R.layout.spinner_item, sensitivityElements);
         sensitivitySpinner.setAdapter(sensitivityAdapter);
@@ -120,19 +118,15 @@ public class MainActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> arg0, View arg1,
                                        int id, long position) {
 
-                if (AppService.getSensorSensitivity() != 0) {
-
-                }
-
                 switch ((int) position) {
                     case 0:
-                        AppService.setSensorSensitivity(SensorManager.SENSOR_STATUS_ACCURACY_LOW);
+                        setSensorSensitivity(SensorManager.SENSOR_STATUS_ACCURACY_LOW);
                         break;
                     case 1:
-                        AppService.setSensorSensitivity(SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM);
+                        setSensorSensitivity(SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM);
                         break;
                     case 2:
-                        AppService.setSensorSensitivity(SensorManager.SENSOR_STATUS_ACCURACY_HIGH);
+                        setSensorSensitivity(SensorManager.SENSOR_STATUS_ACCURACY_HIGH);
                         break;
                 }
 
@@ -147,15 +141,15 @@ public class MainActivity extends AppCompatActivity {
 
         // Monitor button
 
-        monitoring = (Button) findViewById(R.id.monitoring);
+        monitoring = findViewById(R.id.monitoring);
 
         monitoring.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!AppService.isMesuringOn()) {
+                if (!isMesuringOn()) {
                     try {
-                        AppService.setTimeLength((Integer.valueOf(editTextTimeLength.getText().toString())));
-                        monitoring.setText("Trwa pomiar");
+                        setTimeLength((Integer.valueOf(editTextTimeLength.getText().toString())));
+                        monitoring.setText(R.string.inProgress);
                         monitoring.setEnabled(false);
                         sensorsSpiner.setEnabled(false);
                         sensitivitySpinner.setEnabled(false);
@@ -188,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
 
         switch (requestCode) {
             case PERMISSION_WRITE_EXTERNAL_STORAGE: {
@@ -201,16 +195,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onStart() {
-        appServiceIntent = new Intent(this, AppService.class);
+        Intent appServiceIntent = new Intent(this, AppService.class);
         bindService(appServiceIntent, mConnection, Context.BIND_AUTO_CREATE);
         startService(appServiceIntent);
-        if(AppService.isMesuringOn()){
+        if(isMesuringOn()){
             monitoring.setEnabled(false);
             sensorsSpiner.setEnabled(false);
             sensitivitySpinner.setEnabled(false);
             editTextTimeLength.setEnabled(false);
-            editTextTimeLength.setText("" + AppService.getTimeLength());
-            monitoring.setText("Trwa pomiar");
+            editTextTimeLength.setText(getTimeLength());
+            monitoring.setText(R.string.inProgress);
         }
         super.onStart();
         Log.i("AppLog", "Main activity started");
@@ -222,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
             unbindService(mConnection);
             isAppServiceConnect = false;
         }
-        if(AppService.isMesuringOn()){
+        if(isMesuringOn()){
             monitoring.setEnabled(true);
             sensorsSpiner.setEnabled(true);
             sensitivitySpinner.setEnabled(true);
