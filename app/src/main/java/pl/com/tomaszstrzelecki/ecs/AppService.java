@@ -4,12 +4,15 @@ import android.app.IntentService;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.TaskStackBuilder;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.hardware.SensorManager;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -32,6 +35,8 @@ public class AppService extends Service {
     public static int sensorSensitivity = 0;
     public static int timeLength = 0;
     public static boolean isMesuringOn = false;
+    private int batteryPercentage = 0;
+    private int batteryVoltage = 0;
     private SensorsHandle sensorHandle;
     private Thread savingDataThread;
 
@@ -80,6 +85,7 @@ public class AppService extends Service {
 
     @Override
     public void onCreate() {
+        registerBatteryLevelReceiver();
         Log.i("AppLog", "AppService is created");
         super.onCreate();
     }
@@ -162,7 +168,7 @@ public class AppService extends Service {
         protected void onHandleIntent(Intent intent) {
             String action = intent.getAction();
             if (STOP_MEASURING.equals(action)) {
-                try{
+                try {
                     appService.stopMesuring();
                     NotificationManagerCompat.from(this).cancel(1);
                     android.os.Process.killProcess(android.os.Process.myPid());
@@ -182,6 +188,7 @@ public class AppService extends Service {
         savingDataThread = new Thread() {
 
             int timeInSeconds = timeLength * 60;
+
             @Override
             public void run() {
                 try {
@@ -193,9 +200,11 @@ public class AppService extends Service {
                                 sensorHandle.getSensorValues()) {
                             values.add(String.valueOf(value));
                         }
+                        values.add(String.valueOf(batteryPercentage));
+                        values.add(String.valueOf(batteryVoltage));
                         sensorsData.addData(values);
                         timeInSeconds--;
-                        if(timeInSeconds<0){
+                        if (timeInSeconds < 0) {
                             sensorsData.saveData(sensorType);
                             stopMesuring();
                             android.os.Process.killProcess(android.os.Process.myPid());
@@ -211,8 +220,46 @@ public class AppService extends Service {
         savingDataThread.start();
     }
 
-    private  void stopSavingDataThread() {
+    private void stopSavingDataThread() {
         savingDataThread.interrupt();
         Log.i("AppLog", "SavingDataThread stoped");
     }
+
+    // Battery details handle
+
+    private void registerBatteryLevelReceiver() {
+        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        registerReceiver(battery_receiver, filter);
+    }
+
+    private BroadcastReceiver battery_receiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            boolean isPresent = intent.getBooleanExtra("present", false);
+            String technology = intent.getStringExtra("technology");
+            int scale = intent.getIntExtra("scale", -1);
+            int rawlevel = intent.getIntExtra("level", -1);
+            int voltage = intent.getIntExtra("voltage", 0);
+            int level = 0;
+
+            Bundle bundle = intent.getExtras();
+
+            Log.i("AppLog", "BatteryLevel" + bundle.toString());
+
+            if (isPresent) {
+                if (rawlevel >= 0 && scale > 0) {
+                    level = (rawlevel * 100) / scale;
+                }
+
+                String info = ("Technology: " + technology + "\n");
+                batteryPercentage = level;
+                info += "Battery Level: " + level + "%\n";
+                batteryVoltage = voltage;
+                info += ("Voltage: " + voltage + "\n");
+
+                Log.i("BatterInfo", info);
+            }
+        }
+    };
 }
