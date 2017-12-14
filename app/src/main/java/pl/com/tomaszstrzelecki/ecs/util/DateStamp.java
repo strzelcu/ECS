@@ -1,4 +1,4 @@
-package pl.com.tomaszstrzelecki.ecs;
+package pl.com.tomaszstrzelecki.ecs.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;

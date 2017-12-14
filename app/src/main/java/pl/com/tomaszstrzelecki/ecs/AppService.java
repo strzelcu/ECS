@@ -8,12 +8,18 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+
+import pl.com.tomaszstrzelecki.ecs.util.DateStamp;
+import pl.com.tomaszstrzelecki.ecs.util.SensorsData;
 
 public class AppService extends Service {
 
@@ -26,6 +32,8 @@ public class AppService extends Service {
     public static int sensorSensitivity = 0;
     public static int timeLength = 0;
     public static boolean isMesuringOn = false;
+    private SensorsHandle sensorHandle;
+    private Thread savingDataThread;
 
     //Getters and setters
 
@@ -79,18 +87,18 @@ public class AppService extends Service {
     public void startMesuring() {
         isMesuringOn = true;
         showNotificationMeasuring(getApplicationContext());
+        sensorHandle = new SensorsHandle(sensorType, sensorSensitivity, (SensorManager) getSystemService(Context.SENSOR_SERVICE));
+        sensorHandle.startListeningSensor();
+        startSavingDataThread();
         Toast.makeText(getApplicationContext(), "Rozpoczęto pomiar zużycia energii", Toast.LENGTH_LONG).show();
         Log.i("AppLog", "Mesuring is started");
     }
 
     public void stopMesuring() {
         isMesuringOn = false;
-        //TODO DODAć ZAPIS DANYCH Z SENSORÓW
-        SensorsData sensorsData = new SensorsData();
-        String[] testData = {"test", "test"};
-        sensorsData.addData(testData);
-        sensorsData.saveData("SensorTestowy");
-        Toast.makeText(getApplicationContext(), "Przerwano pomiar zużycia energii", Toast.LENGTH_LONG).show();
+        NotificationManagerCompat.from(this).cancelAll();
+        stopSavingDataThread();
+        sensorHandle.stopListeningSensor();
         Log.i("AppLog", "Mesuring is stopped");
     }
 
@@ -154,9 +162,57 @@ public class AppService extends Service {
         protected void onHandleIntent(Intent intent) {
             String action = intent.getAction();
             if (STOP_MEASURING.equals(action)) {
-                appService.stopMesuring();
-                NotificationManagerCompat.from(this).cancel(1);
+                try{
+                    appService.stopMesuring();
+                    NotificationManagerCompat.from(this).cancel(1);
+                    android.os.Process.killProcess(android.os.Process.myPid());
+                } catch (Exception e) {
+                    NotificationManagerCompat.from(this).cancel(1);
+                    android.os.Process.killProcess(android.os.Process.myPid());
+                }
             }
         }
+    }
+
+    // SavingDataThread
+
+    private void startSavingDataThread() {
+        final SensorsData sensorsData = new SensorsData();
+
+        savingDataThread = new Thread() {
+
+            int timeInSeconds = timeLength * 60;
+            @Override
+            public void run() {
+                try {
+                    while (!isInterrupted()) {
+                        Thread.sleep(1000);
+                        ArrayList<String> values = new ArrayList<>();
+                        values.add(DateStamp.getStringDateTime());
+                        for (Float value :
+                                sensorHandle.getSensorValues()) {
+                            values.add(String.valueOf(value));
+                        }
+                        sensorsData.addData(values);
+                        timeInSeconds--;
+                        if(timeInSeconds<0){
+                            sensorsData.saveData(sensorType);
+                            stopMesuring();
+                            android.os.Process.killProcess(android.os.Process.myPid());
+                        }
+                    }
+                } catch (InterruptedException ignored) {
+                    sensorsData.saveData(sensorType);
+                    isMesuringOn = false;
+                }
+            }
+        };
+        Log.i("AppLog", "SavingDataThread started");
+        savingDataThread.start();
+    }
+
+    private  void stopSavingDataThread() {
+        savingDataThread.interrupt();
+        Log.i("AppLog", "SavingDataThread stoped");
     }
 }
