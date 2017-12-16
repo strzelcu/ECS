@@ -23,9 +23,9 @@ public class SensorsData {
         StringBuilder record = new StringBuilder();
         for (String input :
                 inputData) {
-            record.append(input).append(",");
+            record.append(input).append(";");
         }
-        record.deleteCharAt(record.lastIndexOf(","));
+        record.deleteCharAt(record.lastIndexOf(";"));
         record.append("\n");
         data.append(record);
     }
@@ -33,7 +33,7 @@ public class SensorsData {
     public void saveData(int sensorNumber){
 
         date = DateStamp.getStringDateTime().toLowerCase().replace(" ", "_");
-        String fileName = getSensorName(sensorNumber) + "_" + date + "_pomiar.txt";
+        String fileName = getSensorName(sensorNumber) + "_" + date + "_pomiar.csv";
         File file;
 
         if(isExternalStorageWritable()) {

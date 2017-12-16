@@ -21,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import static pl.com.tomaszstrzelecki.ecs.AppService.*;
@@ -141,7 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Monitor button
 
-        monitoring = findViewById(R.id.monitoring);
+        monitoring = (Button) findViewById(R.id.monitoring);
 
         monitoring.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -149,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
                 if (!isMesuringOn()) {
                     try {
                         setTimeLength((Integer.valueOf(editTextTimeLength.getText().toString())));
-                        monitoring.setText(R.string.inProgress);
+                        monitoring.setText("Trwa pomiar");
                         monitoring.setEnabled(false);
                         sensorsSpiner.setEnabled(false);
                         sensitivitySpinner.setEnabled(false);
@@ -203,8 +204,8 @@ public class MainActivity extends AppCompatActivity {
             sensorsSpiner.setEnabled(false);
             sensitivitySpinner.setEnabled(false);
             editTextTimeLength.setEnabled(false);
-            editTextTimeLength.setText(getTimeLength());
-            monitoring.setText(R.string.inProgress);
+            //editTextTimeLength.setText(getTimeLength());
+            //monitoring.setText("Trwa pomiar");
         }
         super.onStart();
         Log.i("AppLog", "Main activity started");

@@ -39,6 +39,7 @@ public class AppService extends Service {
     private int batteryVoltage = 0;
     private SensorsHandle sensorHandle;
     private Thread savingDataThread;
+    private SensorsData sensorsData;
 
     //Getters and setters
 
@@ -117,7 +118,7 @@ public class AppService extends Service {
                 .setAction(STOP_MEASURING);
         PendingIntent stopMeasuringPendingIntent = PendingIntent.getService(context, 0,
                 stopMeasuringIntent, PendingIntent.FLAG_ONE_SHOT);
-        NotificationCompat.Builder mBuilder = (NotificationCompat.Builder) new NotificationCompat.Builder(context)
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setTicker("Pomiar rozpoczęty.")
                 .setContentTitle("Trwa pomiar zużycia energii")
@@ -126,7 +127,7 @@ public class AppService extends Service {
                 .setOngoing(true)
                 .addAction(new NotificationCompat.Action(R.mipmap.ic_launcher,
                         "Zatrzymaj pomiar zużycia energii", stopMeasuringPendingIntent));
-        ;
+
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
         int id = 1;
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
@@ -183,12 +184,12 @@ public class AppService extends Service {
     // SavingDataThread
 
     private void startSavingDataThread() {
-        final SensorsData sensorsData = new SensorsData();
+        sensorsData = new SensorsData();
 
         savingDataThread = new Thread() {
 
             int timeInSeconds = timeLength * 60;
-
+            int timeStamp = 1;
             @Override
             public void run() {
                 try {
@@ -196,6 +197,8 @@ public class AppService extends Service {
                         Thread.sleep(1000);
                         ArrayList<String> values = new ArrayList<>();
                         values.add(DateStamp.getStringDateTime());
+                        values.add(String.valueOf(System.currentTimeMillis()));
+                        values.add(String.valueOf(timeStamp));
                         for (Float value :
                                 sensorHandle.getSensorValues()) {
                             values.add(String.valueOf(value));
@@ -203,6 +206,7 @@ public class AppService extends Service {
                         values.add(String.valueOf(batteryPercentage));
                         values.add(String.valueOf(batteryVoltage));
                         sensorsData.addData(values);
+                        timeStamp++;
                         timeInSeconds--;
                         if (timeInSeconds < 0) {
                             sensorsData.saveData(sensorType);
@@ -262,4 +266,10 @@ public class AppService extends Service {
             }
         }
     };
+
+    @Override
+    protected void finalize() throws Throwable {
+        sensorsData.saveData(sensorType);
+        super.finalize();
+    }
 }
