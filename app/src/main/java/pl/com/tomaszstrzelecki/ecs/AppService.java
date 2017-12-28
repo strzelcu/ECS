@@ -184,7 +184,7 @@ public class AppService extends Service {
     // SavingDataThread
 
     private void startSavingDataThread() {
-        sensorsData = new SensorsData();
+        sensorsData = new SensorsData(sensorType);
 
         savingDataThread = new Thread() {
 
@@ -209,13 +209,13 @@ public class AppService extends Service {
                         timeStamp++;
                         timeInSeconds--;
                         if (timeInSeconds < 0) {
-                            sensorsData.saveData(sensorType);
+                            sensorsData.closeFile();
                             stopMesuring();
                             android.os.Process.killProcess(android.os.Process.myPid());
                         }
                     }
                 } catch (InterruptedException ignored) {
-                    sensorsData.saveData(sensorType);
+                    sensorsData.closeFile();
                     isMesuringOn = false;
                 }
             }
@@ -269,7 +269,7 @@ public class AppService extends Service {
 
     @Override
     protected void finalize() throws Throwable {
-        sensorsData.saveData(sensorType);
+        sensorsData.closeFile();
         super.finalize();
     }
 }

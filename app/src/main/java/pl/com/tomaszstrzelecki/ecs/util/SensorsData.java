@@ -11,30 +11,12 @@ import java.util.ArrayList;
 
 public class SensorsData {
 
-    private StringBuffer data;
     private int id = 1;
-    private String date;
+    private File file;
 
-    public SensorsData() {
-        data = new StringBuffer();
-    }
-
-    public void addData(ArrayList<String> inputData){
-        StringBuilder record = new StringBuilder();
-        for (String input :
-                inputData) {
-            record.append(input).append(";");
-        }
-        record.deleteCharAt(record.lastIndexOf(";"));
-        record.append("\n");
-        data.append(record);
-    }
-
-    public void saveData(int sensorNumber){
-
-        date = DateStamp.getStringDateTime().toLowerCase().replace(" ", "_");
-        String fileName = getSensorName(sensorNumber) + "_" + date + "_pomiar.csv";
-        File file;
+    public SensorsData(int sensorType) {
+        String date = DateStamp.getStringDateTime().toLowerCase().replace(" ", "_");
+        String fileName = getSensorName(sensorType) + "_" + date + "_pomiar.csv";
 
         if(isExternalStorageWritable()) {
 
@@ -49,13 +31,36 @@ public class SensorsData {
                 try {
                     file.createNewFile();
                     FileOutputStream fileOutputStream = new FileOutputStream(file);
-                    fileOutputStream.write(data.toString().getBytes());
                     fileOutputStream.close();
                 } catch (IOException e) {
-                    Log.e("AppLog", "Something happend while saving *.csv file");
+                    Log.e("AppLog", "Something happend while creating *.csv file");
                 }
             }
         }
+    }
+
+    public void addData(ArrayList<String> inputData){
+        StringBuilder record = new StringBuilder();
+        for (String input :
+                inputData) {
+            record.append(input).append(";");
+        }
+        record.deleteCharAt(record.lastIndexOf(";"));
+        record.append("\n");
+
+        if(file.exists()) {
+            try {
+                FileOutputStream fileOutputStream = new FileOutputStream(file, true);
+                fileOutputStream.write(record.toString().getBytes());
+                fileOutputStream.close();
+            } catch (IOException e) {
+                Log.e("AppLog", "Something happend while appending record to *.csv file");
+            }
+        }
+    }
+
+    public void closeFile(){
+        Log.i("AppLog", "Closing file (Not yet closed?)");
     }
 
     private boolean isExternalStorageWritable() {
